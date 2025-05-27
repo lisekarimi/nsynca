@@ -1,0 +1,18 @@
+[project]
+name = "nsynca"
+version = "0.1.0"
+description = "Toolkit to sync Notion data"
+readme = "README.md"
+requires-python = ">=3.11, <3.12"
+dependencies = [
+    "customtkinter>=5.2.0",
+    "notion-client>=2.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pillow>=11.2.1",
+    "pyinstaller>=6.13.0",
+]
+

@@ -1,0 +1,50 @@
+# ▶️ Git and VCS
+.git
+.gitattributes
+
+# ▶️ Python virtual env
+.venv/
+venv/
+
+# ▶️ Python cache and bytecode
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# ▶️ Packaging/build artifacts
+*.egg-info/
+.eggs/
+build/
+dist/
+bin/
+*.spec
+
+# ▶️ Test cache
+.pytest_cache/
+
+# ▶️ VSCode and IDE settings
+.vscode/
+.idea/
+*.sublime*
+
+# ▶️ Environment/config files
+.env
+.env.*
+*.env
+
+# ▶️ Logs and memory (runtime data)
+logs/
+*.log
+memory/
+
+# ▶️ Markdown/docs (if not needed in image)
+changelog.md
+
+# ▶️ CI tools
+.pre-commit-config.yaml
+.github/
+
+# ▶️  Dev Tools
+Makefile

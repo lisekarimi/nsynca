@@ -1,0 +1,31 @@
+name: Code quality CI
+
+on:
+  push:
+    branches: ["feature/**", "dev", "main"]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Python Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: "0.4.19"
+
+    - name: Run Ruff checks
+      run: |
+        uvx ruff check .
+        uvx ruff format --check .
