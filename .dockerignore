@@ -1,19 +1,25 @@
-# ▶️ Git and VCS
-.git
+# Git and version control
+.git/
+.github/
+.gitignore
 .gitattributes
+.pre-commit-config.yaml
 
-# ▶️ Python virtual env
-.venv/
-venv/
+# Python virtual env
+.venv
+**/.venv
+.venv/**
 
-# ▶️ Python cache and bytecode
+# Python cache and build artifacts
 __pycache__/
-**/__pycache__/
-*.py[cod]
+*.pyc
 *.pyo
 *.pyd
+*.pytest_cache/
+*.egg-info/
+.python-version
 
-# ▶️ Packaging/build artifacts
+# Packaging/build artifacts
 *.egg-info/
 .eggs/
 build/
@@ -21,30 +27,33 @@ dist/
 bin/
 *.spec
 
-# ▶️ Test cache
+# Test cache
 .pytest_cache/
 
-# ▶️ VSCode and IDE settings
+# VSCode and IDE settings
 .vscode/
 .idea/
 *.sublime*
+*.code-workspace
+.ruff_cache/
 
-# ▶️ Environment/config files
+# Environment/config files
 .env
 .env.*
 *.env
 
-# ▶️ Logs and memory (runtime data)
+# Logs and memory (runtime data)
 logs/
 *.log
 memory/
 
-# ▶️ Markdown/docs (if not needed in image)
+# Markdown/docs (if not needed in image)
 changelog.md
 
-# ▶️ CI tools
+# CI tools
 .pre-commit-config.yaml
 .github/
+.ruff_cache/
 
-# ▶️  Dev Tools
+# Build automation
 Makefile
