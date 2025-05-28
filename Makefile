@@ -142,3 +142,7 @@ help: ## Show this help message
 # 🎯 Phony Targets
 # =====================================
 .PHONY: $(shell python -c "import re; print(' '.join(re.findall(r'^([a-zA-Z_-]+):\s*.*?##', open('Makefile', encoding='utf-8').read(), re.MULTILINE)))")
+
+# Test the PHONY generation
+# test-phony:
+# 	@echo "$(shell python -c "import re; print(' '.join(sorted(set(re.findall(r'^([a-zA-Z0-9_-]+):', open('act.mk', encoding='utf-8').read(), re.MULTILINE)))))")"
