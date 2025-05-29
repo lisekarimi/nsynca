@@ -6,7 +6,9 @@ repos:
     rev: v0.4.4  # match your Ruff version
     hooks:
       - id: ruff
+        files: \.py$
       - id: ruff-format
+        files: \.py$
 
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v3.12.0
