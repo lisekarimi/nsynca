@@ -74,6 +74,9 @@ gui:	## Run the GUI script
 docker-build:	## Build the Docker image
 	docker build -t $(DOCKER_IMAGE):$(TAG) .
 
+docker-ls: ## List files in Docker image
+	docker run --rm $(DOCKER_IMAGE):$(TAG) ls -la /app
+
 docker-run:	## Run the Docker container
 	docker run --rm \
 		--name $(CONTAINER_NAME) \
