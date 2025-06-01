@@ -47,13 +47,25 @@ logs/
 *.log
 memory/
 
-# Markdown/docs (if not needed in image)
-changelog.md
+# Documentation
+CHANGELOG.md
+README.md
+docs/
 
 # CI tools
 .pre-commit-config.yaml
 .github/
 .ruff_cache/
 
+# Local development and runtime files
+memory/
+notebooks/
+*.ipynb_checkpoints/
+
+# Testing
+tests/
+
 # Build automation
 Makefile
+
+
