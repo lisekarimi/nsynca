@@ -1,25 +1,3 @@
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-## [0.2.0]
-
-### ✨ Added
-- Docker ls command script for container management
-- Makefile test for `PHONY` target to improve CI reliability
-- Additional exclusions to `.dockerignore` file
-
-### 🔄 Changed
-- Updated CI to use latest `uv` version
-- Limited GitHub Actions trigger to Python file changes only (reduces unnecessary runs)
-
-### 🗑️ Removed
-- Deprecated Python setup from CI configuration
-
-### 🔧 Fixed
-- CI reliability issues with improved PHONY target testing
-
-
 ## [0.1.0]
 
 ### ✨ Added
