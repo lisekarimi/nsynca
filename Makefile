@@ -10,7 +10,7 @@ PROJECT_NAME = $(shell python -c "import re; print(re.search('name = \"(.*)\"', 
 VERSION = $(shell python -c "import re; print(re.search('version = \"(.*)\"', open('pyproject.toml').read()).group(1))")
 
 DOCKER_IMAGE = $(DOCKER_USERNAME)/$(PROJECT_NAME)
-TAG = v$(VERSION)
+TAG = $(VERSION)
 CONTAINER_NAME = $(PROJECT_NAME)-container
 
 # =====================================
