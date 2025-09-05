@@ -1,3 +1,4 @@
+# gui/logs_viewer.py
 """
 Logs viewer tab for displaying update history.
 """

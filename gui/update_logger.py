@@ -1,3 +1,4 @@
+# gui/update_logger.py
 """
 Tracks and saves update history to JSON files.
 """

@@ -1,3 +1,4 @@
+# gui.py
 """
 Entry point for the GUI application.
 """

@@ -1,3 +1,4 @@
+# gui/main_window.py
 """
 Main GUI window with buttons and layout.
 """
@@ -16,7 +17,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.client.notion_client import NotionWrapper
-from src.services.orchestrator import ProjectUpdaterOrchestrator
+from src.services.orchestrator import PageUpdaterOrchestrator
 
 # Import from same package
 from .update_logger import UpdateLogger
@@ -84,7 +85,7 @@ class NotionUpdaterGUI:
                     "tasks_db_id": tasks_db_id,
                 }
 
-                self.orchestrator = ProjectUpdaterOrchestrator(notion_wrapper, config)
+                self.orchestrator = PageUpdaterOrchestrator(notion_wrapper, config)
                 self.runner = UpdateRunner(self.orchestrator, self.update_queue)
 
                 self.status_label.configure(text="✓ Ready", text_color="green")

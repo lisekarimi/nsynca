@@ -1,3 +1,4 @@
+# gui/update_runner.py
 """
 Handles running updates in background threads with progress tracking.
 """

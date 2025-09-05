@@ -1,3 +1,4 @@
+# gui/results_display.py
 """
 Handles formatting and displaying update results in table format.
 """
