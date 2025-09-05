@@ -1,3 +1,4 @@
+# src/client/notion_client.py
 """
 Notion API client wrapper and utilities.
 """

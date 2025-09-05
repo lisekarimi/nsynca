@@ -1,3 +1,4 @@
+# src/services/deployment_updater.py
 """
 Service for updating deployment information in Notion projects.
 - Fetches all deployments once
@@ -13,6 +14,7 @@ from ..databases.deployments import (
     DeploymentCollection,
     prepare_deployment_updates,
 )
+from ..client.notion_client import NotionWrapper
 from ..utils.logging import logger
 
 
@@ -21,7 +23,7 @@ class DeploymentUpdater(ProjectUpdaterBase):
     Service that updates Notion projects with deployment information.
     """
 
-    def __init__(self, notion_wrapper, deployments_db_id: str) -> None:
+    def __init__(self, notion_wrapper: NotionWrapper, deployments_db_id: str) -> None:
         """
         Initialize the DeploymentUpdater service.
 
@@ -31,13 +33,14 @@ class DeploymentUpdater(ProjectUpdaterBase):
         """
         super().__init__(notion_wrapper)
         self.deployments_db_id = deployments_db_id
+        self._deployments_by_project: Dict[str, List[Deployment]] = {}
 
-    def fetch_deployments(self) -> DeploymentCollection:
+    def fetch_deployments(self) -> "DeploymentCollection":
         """
         Fetch all deployments from the Notion database.
 
         Returns:
-            Collection of deployments
+            DeploymentCollection: Collection of deployments
 
         Raises:
             Exception: If deployments cannot be fetched
@@ -103,11 +106,15 @@ class DeploymentUpdater(ProjectUpdaterBase):
             logger.info(
                 f"🛠 {project_name} → Last Dev: {latest_dev.version} @ {latest_dev.dev_date_string}"
             )
+        else:
+            logger.warning(f"🛠 {project_name} → Last Dev: none")
 
         if latest_prod:
             logger.info(
                 f"🛠 {project_name} → Last Prod: {latest_prod.version} @ {latest_prod.prod_date_string}"
             )
+        else:
+            logger.warning(f"🛠 {project_name} → Last Prod: none")
 
         logger.info(
             f"📊 {project_name} → Dev Releases: {dev_count}, Prod Releases: {prod_count}"
@@ -121,11 +128,17 @@ class DeploymentUpdater(ProjectUpdaterBase):
             project_id: ID of the project
         """
         try:
+            if project_id not in self._deployments_by_project:
+                logger.debug(
+                    f"No deployments found for project {project_id}; skipping."
+                )
+                return
+
             # Get project info
             _, project_name = self.get_project_info(project_id)
 
             # Get deployments for this project - already available from run()
-            deployments = self.deployments_by_project[project_id]
+            deployments = self._deployments_by_project[project_id]
 
             # Process deployments and get updates
             updates = self._process_deployments(project_name, deployments)
@@ -147,13 +160,13 @@ class DeploymentUpdater(ProjectUpdaterBase):
             deployment_collection = self.fetch_deployments()
 
             # Step 2: Group deployments by project
-            self.deployments_by_project = deployment_collection.group_by_project()
+            self._deployments_by_project = deployment_collection.group_by_project()
             logger.info(
-                f"Found deployments for {len(self.deployments_by_project)} projects"
+                f"Found deployments for {len(self._deployments_by_project)} projects"
             )
 
             # Step 3: Process only projects that have deployments
-            for project_id in self.deployments_by_project:
+            for project_id in self._deployments_by_project:
                 self.process_project(project_id)
 
             logger.info("=== Deployment Updates Complete ===")

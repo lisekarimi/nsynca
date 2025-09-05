@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# main.py
 """
 Entry point script for Nsynca.
 Updates project fields in Notion based on deployment data and task completion.
@@ -10,7 +11,7 @@ from dotenv import load_dotenv
 from notion_client import Client
 
 from src.client.notion_client import NotionWrapper
-from src.services.orchestrator import ProjectUpdaterOrchestrator, UpdaterType
+from src.services.orchestrator import PageUpdaterOrchestrator, UpdaterType
 from src.utils.logging import set_log_level, logger
 
 
@@ -19,7 +20,7 @@ def parse_args():
     Parse command line arguments.
     """
     parser = argparse.ArgumentParser(
-        description="Update Notion project fields based on deployment data and task completion."
+        description="Update Notion database fields based on available updaters."
     )
 
     parser.add_argument(
@@ -32,7 +33,7 @@ def parse_args():
     parser.add_argument(
         "--updaters",
         nargs="+",
-        choices=["deployment", "task", "all"],
+        choices=["deployment", "task", "service", "all"],
         default=["all"],
         help="Which updaters to run (default: all)",
     )
@@ -51,6 +52,7 @@ def get_updater_types(updater_names):
     mapping = {
         "deployment": UpdaterType.DEPLOYMENT,
         "task": UpdaterType.TASK,
+        "service": UpdaterType.SERVICE,
         "all": UpdaterType.ALL,
     }
     return [mapping[name] for name in updater_names]
@@ -71,13 +73,22 @@ def main():
     notion_token = os.getenv("NOTION_API_KEY")
     deployments_db_id = os.getenv("DEPLOYMENTS_DB_ID")
     tasks_db_id = os.getenv("TASKS_DB_ID")
+    services_db_id = os.getenv("SERVICES_DB_ID")
 
     # Check required env vars
     if not notion_token:
         logger.error("NOTION_API_KEY environment variable not set")
         exit(1)
-    if not deployments_db_id or not tasks_db_id:
-        logger.error("DEPLOYMENTS_DB_ID and TASKS_DB_ID must be set in environment")
+    if not deployments_db_id:
+        logger.error("DEPLOYMENTS_DB_ID must be set in environment")
+        exit(1)
+
+    if not tasks_db_id:
+        logger.error("TASKS_DB_ID must be set in environment")
+        exit(1)
+
+    if ("service" in args.updaters or "all" in args.updaters) and not services_db_id:
+        logger.error("SERVICES_DB_ID must be set in environment")
         exit(1)
 
     try:
@@ -89,9 +100,10 @@ def main():
         config = {
             "deployments_db_id": deployments_db_id,
             "tasks_db_id": tasks_db_id,
+            "services_db_id": services_db_id,
         }
 
-        orchestrator = ProjectUpdaterOrchestrator(
+        orchestrator = PageUpdaterOrchestrator(
             notion_wrapper=notion_wrapper, config=config
         )
 

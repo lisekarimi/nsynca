@@ -60,6 +60,9 @@ run-deploy:	## Run the deployment updater
 run-task:	## Run the task updater
 	uv run main.py --updaters task
 
+run-service: ## Run the service updater
+	uv run main.py --updaters service
+
 run-debug:	## Run the app in debug mode
 	uv run main.py --log-level DEBUG
 
@@ -98,7 +101,7 @@ gh-tag: ## Tag Docker image for GitHub Packages
 	docker tag $(DOCKER_IMAGE):$(TAG) ghcr.io/$(GITHUB_USERNAME)/$(PROJECT_NAME):$(TAG)
 	docker tag $(DOCKER_IMAGE):$(TAG) ghcr.io/$(GITHUB_USERNAME)/$(PROJECT_NAME):latest
 
-gh-push: gh-login gh-tag ## Push Docker image to GitHub Packages 
+gh-push: gh-login gh-tag ## Push Docker image to GitHub Packages
 	docker push ghcr.io/$(GITHUB_USERNAME)/$(PROJECT_NAME):$(TAG)
 	docker push ghcr.io/$(GITHUB_USERNAME)/$(PROJECT_NAME):latest
 
