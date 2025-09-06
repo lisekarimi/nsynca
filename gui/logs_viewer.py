@@ -59,7 +59,15 @@ class LogsViewer:
         self.filter_var = ctk.StringVar(value="all")
         self.filter_dropdown = ctk.CTkOptionMenu(
             controls_frame,
-            values=["all", "deployment", "task", "service", "success", "failed"],
+            values=[
+                "all",
+                "deployment",
+                "task",
+                "charge",
+                "service",
+                "success",
+                "failed",
+            ],
             variable=self.filter_var,
             command=self.apply_filter,
             width=120,
@@ -179,7 +187,7 @@ class LogsViewer:
 
         if filter_value == "all":
             return self.current_logs
-        elif filter_value in ["deployment", "task", "service"]:
+        elif filter_value in ["deployment", "task", "charge", "service"]:
             return [log for log in self.current_logs if log["type"] == filter_value]
         elif filter_value in ["success", "failed"]:
             return [log for log in self.current_logs if log["status"] == filter_value]
@@ -222,6 +230,22 @@ class LogsViewer:
             for name, updates in counts["projects"].items():
                 self.details_text.insert("end", f"{name}\n")
                 for key, value in updates.items():
+                    self.details_text.insert("end", f"  {key}: {value}\n")
+                self.details_text.insert("end", "\n")
+
+        # Show charges section
+        if RunDataParser.should_show_charges_section(run):
+            if counts["total_services"] > 0 or counts["total_projects"] > 0:
+                self.details_text.insert("end", f"\n{'*' * 25} CHARGES {'*' * 25}\n\n")
+
+            self.details_text.insert(
+                "end", f"Charges Created ({counts['total_charges']}):\n"
+            )
+            self.details_text.insert("end", f"{'-' * 50}\n\n")
+
+            for name, properties in counts["charges"].items():
+                self.details_text.insert("end", f"{name}\n")
+                for key, value in properties.items():
                     self.details_text.insert("end", f"  {key}: {value}\n")
                 self.details_text.insert("end", "\n")
 

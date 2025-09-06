@@ -53,8 +53,8 @@ class PageUpdaterOrchestrator:
         self.updaters = {
             UpdaterType.DEPLOYMENT: self.deployment_updater,
             UpdaterType.TASK: self.task_updater,
-            UpdaterType.SERVICE: self.service_updater,
             UpdaterType.CHARGE: self.charge_updater,
+            UpdaterType.SERVICE: self.service_updater,
         }
 
     def run(

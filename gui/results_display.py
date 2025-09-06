@@ -86,6 +86,23 @@ class ResultsDisplay:
 
                 self.results_text.insert("end", "\n")
 
+        # -------- Charges section --------
+        if RunDataParser.should_show_charges_section(run_data):
+            # Add divider if we had projects above
+            if counts["total_projects"] > 0:
+                self.results_text.insert("end", "\n")
+
+            self.results_text.insert(
+                "end", f"Charges Created ({counts['total_charges']}):\n"
+            )
+            self.results_text.insert("end", f"{'-' * 50}\n\n")
+
+            for charge_name, properties in counts["charges"].items():
+                self.results_text.insert("end", f"{charge_name}\n")
+                for key, value in properties.items():
+                    self.results_text.insert("end", f"  {key}: {value}\n")
+                self.results_text.insert("end", "\n")
+
         # -------- Services section --------
         if RunDataParser.should_show_services_section(run_data):
             # Add divider if we had projects above

@@ -20,6 +20,7 @@ class UpdateLogger:
             "type": None,
             "status": "pending",
             "projects_updated": {},
+            "charges_created": {},
             "services_updated": {},
         }
 
@@ -30,6 +31,7 @@ class UpdateLogger:
             "type": update_type,
             "status": "running",
             "projects_updated": {},
+            "charges_created": {},
             "services_updated": {},
         }
 
@@ -88,6 +90,27 @@ class UpdateLogger:
             self.current_run["projects_updated"][project_name] = clean_updates
         else:
             self.current_run["projects_updated"][project_name].update(clean_updates)
+
+    def add_charge_create(self, charge_name: str, properties: Dict):
+        """Add a charge creation to current run."""
+        clean = {}
+
+        # Extract relevant charge properties
+        if "Date" in properties and isinstance(properties["Date"], dict):
+            date_value = properties["Date"].get("date", {})
+            clean["Date"] = date_value.get("start", "N/A") if date_value else "N/A"
+
+        if "Price" in properties and isinstance(properties["Price"], dict):
+            clean["Price"] = properties["Price"].get("number", "N/A")
+
+        if "Linked Service" in properties and isinstance(
+            properties["Linked Service"], dict
+        ):
+            relations = properties["Linked Service"].get("relation", [])
+            if relations:
+                clean["Service ID"] = relations[0].get("id", "N/A")
+
+        self.current_run["charges_created"][charge_name] = clean
 
     def add_service_update(self, service_name: str, updates: Dict):
         """Add a service update with normalized values for display."""

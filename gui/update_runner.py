@@ -41,6 +41,8 @@ class UpdateRunner:
                 updater_types = [UpdaterType.DEPLOYMENT]
             elif update_type == "task":
                 updater_types = [UpdaterType.TASK]
+            elif update_type == "charge":
+                updater_types = [UpdaterType.CHARGE]
             elif update_type == "service":
                 updater_types = [UpdaterType.SERVICE]
             else:

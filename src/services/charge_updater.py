@@ -20,24 +20,6 @@ class ChargeUpdater(PageUpdaterBase):
         super().__init__(notion_wrapper)
         self.services_db_id = services_db_id
 
-    # def fetch_service_profiles(self) -> ServiceCollection:
-    #     """Fetch service profiles with monthly or yearly billing cycles."""
-    #     try:
-    #         # Remove ALL filters - get everything
-    #         raw = self.notion.query_database(self.services_db_id)
-
-    #         # DEBUG: Print the raw JSON and exit
-    #         import json
-    #         print("=== RAW JSON RESPONSE (ALL RECORDS) ===")
-    #         print(json.dumps(raw, indent=2))
-    #         print(f"=== FOUND {len(raw)} TOTAL RECORDS ===")
-    #         exit(1)
-
-    #         return ServiceCollection(raw)
-    #     except Exception as e:
-    #         logger.error(f"Failed to fetch service profiles: {e}")
-    #         raise
-
     def fetch_service_profiles(self) -> ServiceCollection:
         """Fetch service profiles with monthly or yearly billing cycles."""
         try:
@@ -65,11 +47,11 @@ class ChargeUpdater(PageUpdaterBase):
             }
             raw = self.notion.query_database(self.services_db_id, filter_obj)
             # DEBUG: Print the raw JSON and exit
-            import json
+            # import json
 
-            print("=== RAW JSON RESPONSE ===")
-            print(json.dumps(raw, indent=2))
-            print(f"=== FOUND {len(raw)} RECORDS ===")
+            # print("=== RAW JSON RESPONSE ===")
+            # print(json.dumps(raw, indent=2))
+            # print(f"=== FOUND {len(raw)} RECORDS ===")
             # exit(1)  # Stop execution here
 
             return ServiceCollection(raw)

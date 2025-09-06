@@ -58,7 +58,7 @@ class NotionUpdaterGUI:
         # Set up window
         self.root = ctk.CTk()
         self.root.title(f"Nsynca - v{version}")
-        self.root.geometry("900x700")
+        self.root.geometry("1100x700")
 
         # Theme
         ctk.set_appearance_mode("dark")
@@ -104,6 +104,7 @@ class NotionUpdaterGUI:
                 self.status_label.configure(text="✓ Ready", text_color="green")
                 self.enable_buttons()
                 if not services_db_id:
+                    self.btn_charges.configure(state="disabled")
                     self.btn_services.configure(state="disabled")
             except Exception as e:
                 self.status_label.configure(
@@ -115,23 +116,57 @@ class NotionUpdaterGUI:
             )
 
     def _patch_notion_wrapper(self, notion_wrapper):
+        """
+        Patch the notion wrapper to track page updates and creations.
+
+        This method intercepts update_page and create_page calls to send
+        progress updates to the GUI queue for real-time feedback.
+        """
+        # Store original methods before patching
         original_update = notion_wrapper.update_page
+        original_create = notion_wrapper.create_page
         services_db_id = os.getenv("SERVICES_DB_ID")
 
         def tracked_update(page_id, updates):
+            """Track page updates and categorize them by database type."""
             result = original_update(page_id, updates)
             page = notion_wrapper.get_page(page_id)
             name = notion_wrapper.extract_title(page)
             db_id = (page.get("parent") or {}).get("database_id")
+
+            # Categorize update by database type
             if services_db_id and db_id == services_db_id:
-                # tell the GUI/logging this is a service update
                 self.update_queue.put(("service_update", name, updates))
             else:
-                # default to project updates (deployments/tasks)
+                # Default to project updates (deployments/tasks)
                 self.update_queue.put(("project_update", name, updates))
             return result
 
+        def tracked_create(database_id, properties):
+            """Track page creation and categorize by entry type."""
+            result = original_create(database_id, properties)
+
+            # Extract page name from properties
+            name = ""
+            if "Name" in properties and "title" in properties["Name"]:
+                name = properties["Name"]["title"][0]["text"]["content"]
+
+            # Categorize creation by database and entry type
+            if services_db_id and database_id == services_db_id:
+                entry_type = (
+                    properties.get("Entry Type", {}).get("select", {}).get("name", "")
+                )
+                if entry_type == "Charge":
+                    self.update_queue.put(("charge_create", name, properties))
+                else:
+                    self.update_queue.put(("service_update", name, properties))
+            else:
+                self.update_queue.put(("project_update", name, properties))
+            return result
+
+        # Replace original methods with tracked versions
         notion_wrapper.update_page = tracked_update
+        notion_wrapper.create_page = tracked_create
 
     def create_widgets(self):
         """Create all GUI elements."""
@@ -194,6 +229,17 @@ class NotionUpdaterGUI:
         )
         self.btn_tasks.pack(side="left", padx=10, pady=20)
 
+        self.btn_charges = ctk.CTkButton(
+            buttons_frame,
+            text="Charges Rows",
+            command=lambda: self.run_update("charge"),
+            width=180,
+            height=50,
+            font=ctk.CTkFont(size=16),
+            state="disabled",
+        )
+        self.btn_charges.pack(side="left", padx=10, pady=20)
+
         self.btn_services = ctk.CTkButton(
             buttons_frame,
             text="Services Only",
@@ -246,6 +292,7 @@ class NotionUpdaterGUI:
         self.btn_all.configure(state="normal")
         self.btn_deployments.configure(state="normal")
         self.btn_tasks.configure(state="normal")
+        self.btn_charges.configure(state="normal")
         self.btn_services.configure(state="normal")
 
     def disable_buttons(self):
@@ -253,6 +300,7 @@ class NotionUpdaterGUI:
         self.btn_all.configure(state="disabled")
         self.btn_deployments.configure(state="disabled")
         self.btn_tasks.configure(state="disabled")
+        self.btn_charges.configure(state="disabled")
         self.btn_services.configure(state="disabled")
 
     def run_update(self, update_type: str):
@@ -275,6 +323,10 @@ class NotionUpdaterGUI:
         elif update_type == "task":
             self.update_status_label.configure(
                 text="Updating tasks in progress...", text_color="yellow"
+            )
+        elif update_type == "charge":
+            self.update_status_label.configure(
+                text="Creating charges in progress...", text_color="yellow"
             )
         elif update_type == "service":
             self.update_status_label.configure(
@@ -312,6 +364,11 @@ class NotionUpdaterGUI:
                     _, project_name, updates = msg
                     self.logger.add_project_update(project_name, updates)
 
+                elif msg[0] == "charge_create":
+                    # Track the charge creation
+                    _, charge_name, properties = msg
+                    self.logger.add_charge_create(charge_name, properties)
+
                 elif msg[0] == "service_update":
                     # Track the service update
                     _, service_name, updates = msg
@@ -329,12 +386,14 @@ class NotionUpdaterGUI:
                         )
 
                         projects_cnt = len(run_data.get("projects_updated", {}))
+                        charges_cnt = len(run_data.get("charges_created", {}))
                         services_cnt = len(run_data.get("services_updated", {}))
 
                         # Update footer
                         self.footer_label.configure(
                             text=f"Last update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
                             f"{projects_cnt} projects updated - "
+                            f"{charges_cnt} charges created - "
                             f"{services_cnt} services updated - "
                             f"Status: {run_data['status']}"
                         )

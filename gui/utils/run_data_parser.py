@@ -58,6 +58,7 @@ class RunDataParser:
         actual_projects, actual_services = RunDataParser.separate_projects_and_services(
             run_data
         )
+        charges = run_data.get("charges_created", {}) or {}
         run_type = run_data.get("type")
 
         # For service-only runs, check if data is in wrong bucket
@@ -67,8 +68,10 @@ class RunDataParser:
 
         return {
             "projects": actual_projects,
+            "charges": charges,
             "services": actual_services,
             "total_projects": len(actual_projects),
+            "total_charges": len(charges),
             "total_services": len(actual_services),
         }
 
@@ -78,12 +81,14 @@ class RunDataParser:
         counts = RunDataParser.get_entity_counts(run_data)
         run_type = run_data.get("type")
 
-        if run_type == "service":
+        if run_type == "charge":
+            return f"Total: {counts['total_charges']} charges created"
+        elif run_type == "service":
             return f"Total: {counts['total_services']} services updated"
         elif run_type in ("deployment", "task", "project"):
             return f"Total: {counts['total_projects']} projects updated"
         else:  # "all"
-            return f"Total: {counts['total_projects']} projects, {counts['total_services']} services updated"
+            return f"Total: {counts['total_projects']} projects, {counts['total_services']} services, {counts['total_charges']} charges"
 
     @staticmethod
     def format_button_text(run_data: Dict, timestamp_str: str, status_text: str) -> str:
@@ -91,10 +96,12 @@ class RunDataParser:
         counts = RunDataParser.get_entity_counts(run_data)
         run_type = run_data.get("type", "")
 
-        if run_type == "service":
+        if run_type == "charge":
+            entity_text = f"{counts['total_charges']} charges"
+        elif run_type == "service":
             entity_text = f"{counts['total_services']} services"
         elif run_type == "all":
-            entity_text = f"{counts['total_projects']} projects, {counts['total_services']} services"
+            entity_text = f"{counts['total_projects']} projects, {counts['total_services']} services, {counts['total_charges']} charges"
         else:
             entity_text = f"{counts['total_projects']} projects"
 
@@ -118,6 +125,13 @@ class RunDataParser:
             run_type in ("deployment", "task", "project", "all")
             and counts["total_projects"] > 0
         )
+
+    @staticmethod
+    def should_show_charges_section(run_data: Dict) -> bool:
+        """Determine if charges section should be shown."""
+        run_type = run_data.get("type")
+        counts = RunDataParser.get_entity_counts(run_data)
+        return run_type in ("charge", "all") and counts["total_charges"] > 0
 
     @staticmethod
     def should_show_services_section(run_data: Dict) -> bool:
