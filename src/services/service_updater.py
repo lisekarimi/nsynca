@@ -68,7 +68,7 @@ class ServiceUpdater(PageUpdaterBase):
             status_val = "Active"
 
         updates = {
-            "Status": {"status": {"name": status_val}},
+            "Status": {"select": {"name": status_val}},
         }
         # Only add Next Due Date if we have a valid date
         if next_due_iso:

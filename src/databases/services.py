@@ -24,6 +24,7 @@ class Service:
         props = notion_obj.get("properties", {})
 
         self.name = _title(props.get("Name"))
+        self.entry_type = _select_or_status_name(props.get("Entry Type"))
         self.billing_cycle = _select_or_status_name(props.get("Billing Cycle"))
 
         # Last Payment Date (rollup -> date -> start), with guards
