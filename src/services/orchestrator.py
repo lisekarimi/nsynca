@@ -9,6 +9,7 @@ from ..client.notion_client import NotionWrapper
 from .deployment_updater import DeploymentUpdater
 from .task_updater import TaskUpdater
 from .service_updater import ServiceUpdater
+from .charge_updater import ChargeUpdater
 from ..utils.logging import logger
 
 
@@ -20,6 +21,7 @@ class UpdaterType(Enum):
     DEPLOYMENT = "deployment"
     TASK = "task"
     SERVICE = "service"
+    CHARGE = "charge"
     ALL = "all"
 
 
@@ -45,12 +47,14 @@ class PageUpdaterOrchestrator:
         )
         self.task_updater = TaskUpdater(notion_wrapper, config["tasks_db_id"])
         self.service_updater = ServiceUpdater(notion_wrapper, config["services_db_id"])
+        self.charge_updater = ChargeUpdater(notion_wrapper, config["services_db_id"])
 
         # Map updater types to instances
         self.updaters = {
             UpdaterType.DEPLOYMENT: self.deployment_updater,
             UpdaterType.TASK: self.task_updater,
             UpdaterType.SERVICE: self.service_updater,
+            UpdaterType.CHARGE: self.charge_updater,
         }
 
     def run(
@@ -124,6 +128,12 @@ class PageUpdaterOrchestrator:
         Convenience method to run only service updates.
         """
         self.run([UpdaterType.SERVICE])
+
+    def run_charge_updates(self) -> None:
+        """
+        Convenience method to run only charge updates.
+        """
+        self.run([UpdaterType.CHARGE])
 
     def run_all_updates(self) -> None:
         """

@@ -43,6 +43,11 @@ class Service:
             datetime.fromisoformat(end_date_start) if end_date_start else None
         )
 
+        # New properties for charges and service profiles
+        self.price = _number(props.get("Price"))
+        self.date = _date(props.get("Date"))
+        self.linked_service = _relation(props.get("Linked Service"))
+
 
 class ServiceCollection:
     """
@@ -61,6 +66,20 @@ class ServiceCollection:
     def total_count(self) -> int:
         """Get the total number of services."""
         return len(self.services)
+
+    def filter_by_entry_type(self, entry_type: str) -> List[Service]:
+        """Filter services by entry type."""
+        return [s for s in self.services if s.entry_type == entry_type]
+
+    def charges_for_service(self, service_id: str) -> List[Service]:
+        """Get all charges linked to a specific service."""
+        return [
+            s
+            for s in self.services
+            if s.entry_type == "Charge"
+            and s.linked_service
+            and service_id in s.linked_service
+        ]
 
 
 # --- Helpers ---
@@ -85,6 +104,36 @@ def _select_or_status_name(p) -> Optional[str]:
         sts = p.get("status")
         if sts and sts.get("name"):
             return sts["name"]
+    except Exception:
+        pass
+    return None
+
+
+def _number(p) -> Optional[float]:
+    """Extract number from a Notion number property."""
+    try:
+        if p and p.get("number") is not None:
+            return float(p["number"])
+    except Exception:
+        pass
+    return None
+
+
+def _date(p) -> Optional[datetime]:
+    """Extract date from a Notion date property."""
+    try:
+        if p and p.get("date") and p["date"].get("start"):
+            return datetime.fromisoformat(p["date"]["start"]).date()
+    except Exception:
+        pass
+    return None
+
+
+def _relation(p) -> Optional[List[str]]:
+    """Extract relation IDs from a Notion relation property."""
+    try:
+        if p and p.get("relation"):
+            return [rel["id"] for rel in p["relation"]]
     except Exception:
         pass
     return None

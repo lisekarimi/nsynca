@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument(
         "--updaters",
         nargs="+",
-        choices=["deployment", "task", "service", "all"],
+        choices=["deployment", "task", "service", "charge", "all"],
         default=["all"],
         help="Which updaters to run (default: all)",
     )
@@ -54,6 +54,7 @@ def get_updater_types(updater_names):
         "task": UpdaterType.TASK,
         "service": UpdaterType.SERVICE,
         "all": UpdaterType.ALL,
+        "charge": UpdaterType.CHARGE,
     }
     return [mapping[name] for name in updater_names]
 
@@ -88,6 +89,10 @@ def main():
         exit(1)
 
     if ("service" in args.updaters or "all" in args.updaters) and not services_db_id:
+        logger.error("SERVICES_DB_ID must be set in environment")
+        exit(1)
+
+    if ("charge" in args.updaters or "all" in args.updaters) and not services_db_id:
         logger.error("SERVICES_DB_ID must be set in environment")
         exit(1)
 

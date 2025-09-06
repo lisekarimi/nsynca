@@ -80,6 +80,29 @@ class NotionWrapper:
         except Exception as e:
             raise Exception(f"Failed to update page {page_id}: {e}")
 
+    def create_page(
+        self, database_id: str, properties: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Create a new page in a Notion database.
+
+        Args:
+            database_id: ID of the Notion database
+            properties: Dictionary of properties for the new page
+
+        Returns:
+            Created page object
+
+        Raises:
+            Exception: If the creation fails
+        """
+        try:
+            return self.client.pages.create(
+                parent={"database_id": database_id}, properties=properties
+            )
+        except Exception as e:
+            raise Exception(f"Failed to create page in database {database_id}: {e}")
+
     def extract_title(self, page: Dict[str, Any]) -> str:
         """
         Extract the title from a Notion page.
