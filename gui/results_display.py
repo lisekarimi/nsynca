@@ -4,8 +4,8 @@ Handles formatting and displaying update results in table format.
 """
 
 import customtkinter as ctk
-from datetime import datetime
 from typing import Dict
+from gui.utils.run_data_parser import RunDataParser
 
 
 class ResultsDisplay:
@@ -33,58 +33,79 @@ class ResultsDisplay:
         self.results_text.delete("1.0", "end")
 
     def show_results(self, run_data: Dict):
-        """Display results in a table format."""
+        """Display results for projects and/or services."""
         self.clear()
 
-        # Header
-        self.results_text.insert(
-            "end", f"Update Summary - {run_data['type'].upper()}\n"
-        )
-        self.results_text.insert(
-            "end",
-            f"Time: {datetime.fromisoformat(run_data['timestamp']).strftime('%Y-%m-%d %H:%M:%S')}\n",
-        )
-        self.results_text.insert("end", f"{'=' * 70}\n\n")
+        # Header using utility
+        header = RunDataParser.format_header_info(run_data)
+        self.results_text.insert("end", header)
 
-        # Display each project and its updates
-        projects = run_data["projects_updated"]
+        # Use utility to get proper data separation
+        counts = RunDataParser.get_entity_counts(run_data)
 
-        for project_name, updates in projects.items():
-            # Project header
-            self.results_text.insert("end", f"{project_name}\n")
+        # -------- Projects section --------
+        if RunDataParser.should_show_projects_section(run_data):
+            self.results_text.insert(
+                "end", f"Projects Updated ({counts['total_projects']}):\n"
+            )
+            self.results_text.insert("end", f"{'-' * 50}\n\n")
 
-            # Display updates in order based on what was updated
-            # Deployment info first
-            if "Last Dev" in updates:
-                self.results_text.insert("end", f"  Last Dev:  {updates['Last Dev']}\n")
-            if "Last Prod" in updates:
-                self.results_text.insert(
-                    "end", f"  Last Prod: {updates['Last Prod']}\n"
-                )
+            for project_name, updates in counts["projects"].items():
+                # Project header
+                self.results_text.insert("end", f"{project_name}\n")
 
-            # Release counts
-            if "Dev Releases" in updates:
-                self.results_text.insert(
-                    "end", f"  Dev Releases: {updates['Dev Releases']}\n"
-                )
-            if "Prod Releases" in updates:
-                self.results_text.insert(
-                    "end", f"  Prod Releases: {updates['Prod Releases']}\n"
-                )
+                # Deployment info
+                if "Last Dev" in updates:
+                    self.results_text.insert(
+                        "end", f"  Last Dev:  {updates['Last Dev']}\n"
+                    )
+                if "Last Prod" in updates:
+                    self.results_text.insert(
+                        "end", f"  Last Prod: {updates['Last Prod']}\n"
+                    )
 
-            # Task info
-            if "Total Tasks" in updates:
-                self.results_text.insert(
-                    "end", f"  Total Tasks: {updates['Total Tasks']}\n"
-                )
-            if "Completed Tasks" in updates:
-                self.results_text.insert(
-                    "end", f"  Completed Tasks: {updates['Completed Tasks']}\n"
-                )
+                # Release counts
+                if "Dev Releases" in updates:
+                    self.results_text.insert(
+                        "end", f"  Dev Releases: {updates['Dev Releases']}\n"
+                    )
+                if "Prod Releases" in updates:
+                    self.results_text.insert(
+                        "end", f"  Prod Releases: {updates['Prod Releases']}\n"
+                    )
 
-            # Add spacing between projects
-            self.results_text.insert("end", "\n")
+                # Task info
+                if "Total Tasks" in updates:
+                    self.results_text.insert(
+                        "end", f"  Total Tasks: {updates['Total Tasks']}\n"
+                    )
+                if "Completed Tasks" in updates:
+                    self.results_text.insert(
+                        "end", f"  Completed Tasks: {updates['Completed Tasks']}\n"
+                    )
 
-        # Summary
+                self.results_text.insert("end", "\n")
+
+        # -------- Services section --------
+        if RunDataParser.should_show_services_section(run_data):
+            # Add divider if we had projects above
+            if counts["total_projects"] > 0:
+                self.results_text.insert("end", "\n")
+
+            services_to_show = RunDataParser.get_services_data_for_display(run_data)
+
+            self.results_text.insert(
+                "end", f"Services Updated ({counts['total_services']}):\n"
+            )
+            self.results_text.insert("end", f"{'-' * 50}\n\n")
+
+            for service_name, updates in services_to_show.items():
+                self.results_text.insert("end", f"{service_name}\n")
+                for key, val in updates.items():
+                    self.results_text.insert("end", f"  {key}: {val}\n")
+                self.results_text.insert("end", "\n")
+
+        # Summary footer using utility
         self.results_text.insert("end", f"{'-' * 70}\n")
-        self.results_text.insert("end", f"Total: {len(projects)} projects updated\n")
+        summary = RunDataParser.format_run_summary(run_data)
+        self.results_text.insert("end", f"{summary}\n")

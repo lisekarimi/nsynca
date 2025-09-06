@@ -8,6 +8,7 @@ import json
 import os
 from datetime import datetime
 from typing import Dict, List
+from gui.utils.run_data_parser import RunDataParser
 
 
 class LogsViewer:
@@ -58,7 +59,7 @@ class LogsViewer:
         self.filter_var = ctk.StringVar(value="all")
         self.filter_dropdown = ctk.CTkOptionMenu(
             controls_frame,
-            values=["all", "deployment", "task", "success", "failed"],
+            values=["all", "deployment", "task", "service", "success", "failed"],
             variable=self.filter_var,
             command=self.apply_filter,
             width=120,
@@ -146,7 +147,7 @@ class LogsViewer:
         filtered_logs = self.filter_logs()
 
         # Display each run
-        for i, run in enumerate(filtered_logs):
+        for i, run in enumerate(reversed(filtered_logs)):
             run_frame = ctk.CTkFrame(self.runs_scroll)
             run_frame.pack(fill="x", pady=2)
 
@@ -158,8 +159,8 @@ class LogsViewer:
             status_color = "green" if run["status"] == "success" else "red"
             status_text = "✓" if run["status"] == "success" else "✗"
 
-            # Create run button
-            btn_text = f"{status_text} {time_str} - {run['type'].upper()} - {len(run['projects_updated'])} projects"
+            # Create run button using utility
+            btn_text = RunDataParser.format_button_text(run, time_str, status_text)
 
             run_btn = ctk.CTkButton(
                 run_frame,
@@ -178,7 +179,7 @@ class LogsViewer:
 
         if filter_value == "all":
             return self.current_logs
-        elif filter_value in ["deployment", "task"]:
+        elif filter_value in ["deployment", "task", "service"]:
             return [log for log in self.current_logs if log["type"] == filter_value]
         elif filter_value in ["success", "failed"]:
             return [log for log in self.current_logs if log["status"] == filter_value]
@@ -208,19 +209,37 @@ class LogsViewer:
             duration = (completed - timestamp).total_seconds()
             self.details_text.insert("end", f"Duration: {duration:.1f} seconds\n")
 
-        self.details_text.insert(
-            "end", f"\nProjects Updated ({len(run['projects_updated'])}):\n"
-        )
-        self.details_text.insert("end", f"{'-' * 50}\n\n")
+        # Use utility to get proper data separation
+        counts = RunDataParser.get_entity_counts(run)
 
-        # Project details
-        for project_name, updates in run["projects_updated"].items():
-            self.details_text.insert("end", f"{project_name}\n")
+        # Show projects section
+        if RunDataParser.should_show_projects_section(run):
+            self.details_text.insert(
+                "end", f"\nProjects Updated ({counts['total_projects']}):\n"
+            )
+            self.details_text.insert("end", f"{'-' * 50}\n\n")
 
-            for key, value in updates.items():
-                self.details_text.insert("end", f"  {key}: {value}\n")
+            for name, updates in counts["projects"].items():
+                self.details_text.insert("end", f"{name}\n")
+                for key, value in updates.items():
+                    self.details_text.insert("end", f"  {key}: {value}\n")
+                self.details_text.insert("end", "\n")
 
-            self.details_text.insert("end", "\n")
+        # Show services section
+        if RunDataParser.should_show_services_section(run):
+            if counts["total_projects"] > 0:  # Add separator if we had projects
+                self.details_text.insert("end", f"\n{'*' * 25} SERVICES {'*' * 25}\n\n")
+
+            self.details_text.insert(
+                "end", f"Services Updated ({counts['total_services']}):\n"
+            )
+            self.details_text.insert("end", f"{'-' * 50}\n\n")
+
+            for name, updates in counts["services"].items():
+                self.details_text.insert("end", f"{name}\n")
+                for key, value in updates.items():
+                    self.details_text.insert("end", f"  {key}: {value}\n")
+                self.details_text.insert("end", "\n")
 
     def refresh_logs(self):
         """Refresh the logs display."""

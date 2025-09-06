@@ -7,6 +7,7 @@ import os
 import json
 from datetime import datetime
 from typing import Dict
+from src.utils.logging import logger
 
 
 class UpdateLogger:
@@ -19,6 +20,7 @@ class UpdateLogger:
             "type": None,
             "status": "pending",
             "projects_updated": {},
+            "services_updated": {},
         }
 
     def start_run(self, update_type: str):
@@ -28,6 +30,7 @@ class UpdateLogger:
             "type": update_type,
             "status": "running",
             "projects_updated": {},
+            "services_updated": {},
         }
 
     def add_project_update(self, project_name: str, updates: Dict):
@@ -86,6 +89,18 @@ class UpdateLogger:
         else:
             self.current_run["projects_updated"][project_name].update(clean_updates)
 
+    def add_service_update(self, service_name: str, updates: Dict):
+        """Add a service update with normalized values for display."""
+        clean = {}
+        for k, v in updates.items():
+            if k == "Next Due Date" and isinstance(v, dict):
+                clean[k] = (v.get("date") or {}).get("start", "N/A")
+            elif k == "Status" and isinstance(v, dict):
+                clean[k] = ((v.get("status") or {}).get("name")) or "N/A"
+            else:
+                clean[k] = v
+        self.current_run["services_updated"].setdefault(service_name, {}).update(clean)
+
     def _extract_text(self, value: Dict) -> str:
         """Extract text from rich_text field."""
         if value.get("rich_text") and len(value["rich_text"]) > 0:
@@ -126,4 +141,4 @@ class UpdateLogger:
             with open(filename, "w") as f:
                 json.dump(existing, f, indent=2)
         except Exception as e:
-            print(f"Error saving log: {e}")
+            logger.error(f"Error saving log: {e}")

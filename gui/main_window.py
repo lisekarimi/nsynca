@@ -34,15 +34,26 @@ class NotionUpdaterGUI:
         load_dotenv()
 
         # Get version from pyproject.toml
+        pyproject_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "pyproject.toml"
+        )
+
         try:
-            pyproject_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)), "pyproject.toml"
-            )
             with open(pyproject_path, "rb") as f:
                 data = tomllib.load(f)
-                version = data.get("project", {}).get("version", "1.0.0")
-        except Exception:
-            version = "1.0.0"
+        except FileNotFoundError:
+            raise FileNotFoundError(f"pyproject.toml not found at {pyproject_path}")
+        except tomllib.TOMLDecodeError as e:
+            raise ValueError(f"Invalid TOML format in pyproject.toml: {e}")
+
+        # Extract version - raise error if not found
+        try:
+            version = data["project"]["version"]
+        except KeyError as e:
+            raise KeyError(f"Version not found in pyproject.toml. Missing key: {e}")
+
+        if not version:
+            raise ValueError("Version is empty in pyproject.toml")
 
         # Set up window
         self.root = ctk.CTk()
@@ -71,6 +82,7 @@ class NotionUpdaterGUI:
         notion_token = os.getenv("NOTION_API_KEY")
         deployments_db_id = os.getenv("DEPLOYMENTS_DB_ID")
         tasks_db_id = os.getenv("TASKS_DB_ID")
+        services_db_id = os.getenv("SERVICES_DB_ID")
 
         if all([notion_token, deployments_db_id, tasks_db_id]):
             try:
@@ -83,6 +95,7 @@ class NotionUpdaterGUI:
                 config = {
                     "deployments_db_id": deployments_db_id,
                     "tasks_db_id": tasks_db_id,
+                    "services_db_id": services_db_id,
                 }
 
                 self.orchestrator = PageUpdaterOrchestrator(notion_wrapper, config)
@@ -90,6 +103,8 @@ class NotionUpdaterGUI:
 
                 self.status_label.configure(text="✓ Ready", text_color="green")
                 self.enable_buttons()
+                if not services_db_id:
+                    self.btn_services.configure(state="disabled")
             except Exception as e:
                 self.status_label.configure(
                     text=f"✗ Init Error: {str(e)}", text_color="red"
@@ -100,16 +115,20 @@ class NotionUpdaterGUI:
             )
 
     def _patch_notion_wrapper(self, notion_wrapper):
-        """Patch Notion wrapper to track updates."""
         original_update = notion_wrapper.update_page
+        services_db_id = os.getenv("SERVICES_DB_ID")
 
         def tracked_update(page_id, updates):
             result = original_update(page_id, updates)
-            # Get project info
             page = notion_wrapper.get_page(page_id)
-            project_name = notion_wrapper.extract_title(page)
-            # Track the update
-            self.update_queue.put(("project_update", project_name, updates))
+            name = notion_wrapper.extract_title(page)
+            db_id = (page.get("parent") or {}).get("database_id")
+            if services_db_id and db_id == services_db_id:
+                # tell the GUI/logging this is a service update
+                self.update_queue.put(("service_update", name, updates))
+            else:
+                # default to project updates (deployments/tasks)
+                self.update_queue.put(("project_update", name, updates))
             return result
 
         notion_wrapper.update_page = tracked_update
@@ -175,6 +194,17 @@ class NotionUpdaterGUI:
         )
         self.btn_tasks.pack(side="left", padx=10, pady=20)
 
+        self.btn_services = ctk.CTkButton(
+            buttons_frame,
+            text="Services Only",
+            command=lambda: self.run_update("service"),
+            width=180,
+            height=50,
+            font=ctk.CTkFont(size=16),
+            state="disabled",
+        )
+        self.btn_services.pack(side="left", padx=10, pady=20)
+
         # Status section
         status_frame = ctk.CTkFrame(self.tab_update)
         status_frame.pack(fill="x", pady=10)
@@ -216,12 +246,14 @@ class NotionUpdaterGUI:
         self.btn_all.configure(state="normal")
         self.btn_deployments.configure(state="normal")
         self.btn_tasks.configure(state="normal")
+        self.btn_services.configure(state="normal")
 
     def disable_buttons(self):
         """Disable all buttons."""
         self.btn_all.configure(state="disabled")
         self.btn_deployments.configure(state="disabled")
         self.btn_tasks.configure(state="disabled")
+        self.btn_services.configure(state="disabled")
 
     def run_update(self, update_type: str):
         """Start an update run."""
@@ -243,6 +275,10 @@ class NotionUpdaterGUI:
         elif update_type == "task":
             self.update_status_label.configure(
                 text="Updating tasks in progress...", text_color="yellow"
+            )
+        elif update_type == "service":
+            self.update_status_label.configure(
+                text="Updating services in progress...", text_color="yellow"
             )
 
         # Disable buttons
@@ -272,9 +308,14 @@ class NotionUpdaterGUI:
                     pass
 
                 elif msg[0] == "project_update":
-                    # Track the update
+                    # Track the project update
                     _, project_name, updates = msg
                     self.logger.add_project_update(project_name, updates)
+
+                elif msg[0] == "service_update":
+                    # Track the service update
+                    _, service_name, updates = msg
+                    self.logger.add_service_update(service_name, updates)
 
                 elif msg[0] == "complete":
                     if msg[1] == "success":
@@ -287,10 +328,14 @@ class NotionUpdaterGUI:
                             text="✓ Update completed successfully!", text_color="green"
                         )
 
+                        projects_cnt = len(run_data.get("projects_updated", {}))
+                        services_cnt = len(run_data.get("services_updated", {}))
+
                         # Update footer
                         self.footer_label.configure(
                             text=f"Last update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - "
-                            f"{len(run_data['projects_updated'])} projects updated - "
+                            f"{projects_cnt} projects updated - "
+                            f"{services_cnt} services updated - "
                             f"Status: {run_data['status']}"
                         )
                     else:
