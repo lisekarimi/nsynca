@@ -6,8 +6,8 @@ include .env
 export
 
 # Read from pyproject.toml using grep (works on all platforms)
-PROJECT_NAME = $(shell python -c "import re; print(re.search('name = \"(.*)\"', open('pyproject.toml').read()).group(1))")
-VERSION = $(shell python -c "import re; print(re.search('version = \"(.*)\"', open('pyproject.toml').read()).group(1))")
+PROJECT_NAME = $(shell python3 -c "import re; print(re.search('name = \"(.*)\"', open('pyproject.toml').read()).group(1))")
+VERSION = $(shell python3 -c "import re; print(re.search('version = \"(.*)\"', open('pyproject.toml').read()).group(1))")
 
 DOCKER_IMAGE = $(DOCKER_USERNAME)/$(PROJECT_NAME)
 TAG = $(VERSION)
@@ -36,13 +36,14 @@ install-hooks:	## Install pre-commit hooks
 # ✨ Code Quality
 # =====================================
 
-lint:	## Run code linting and formatting
-	uvx ruff check .
-	uvx ruff format .
+RUFF = uvx ruff
 
-fix:	## Fix code issues and format
-	uvx ruff check --fix .
-	uvx ruff format .
+lint: ## Only check (no fixes, no formatting)
+	$(RUFF) check .
+
+fix: ## Auto-fix issues and format
+	$(RUFF) check --fix .
+	$(RUFF) format .
 
 
 # =====================================
@@ -51,22 +52,7 @@ fix:	## Fix code issues and format
 
 # Note: uv run automatically creates venv and installs dependencies if needed
 
-run:	## Runs all updaters (default behavior)
-	uv run main.py
-
-run-deploy:	## Run the deployment updater
-	uv run main.py --updaters deployment
-
-run-task:	## Run the task updater
-	uv run main.py --updaters task
-
-run-service: ## Run the service updater
-	uv run main.py --updaters service
-
-run-debug:	## Run the app in debug mode
-	uv run main.py --log-level DEBUG
-
-gui:	## Run the GUI script
+gui:	## Run the GUI script (Docker doesn't support GUI)
 	uv run gui.py
 
 
@@ -80,12 +66,26 @@ docker-build:	## Build the Docker image
 docker-ls: ## List files in Docker image
 	docker run --rm $(DOCKER_IMAGE):$(TAG) ls -la /app
 
-docker-run:	## Run the Docker container
-	docker run --rm \
-		--name $(CONTAINER_NAME) \
+docker-dev:	## Run Docker container with hot reload in background (for development sessions)
+	docker run -d \
+		--name $(CONTAINER_NAME)-dev \
 		--env-file .env \
+		-v $(PWD):/app \
 		$(DOCKER_IMAGE):$(TAG)
 
+docker-run:	## Run all updaters in Docker (runs once and exits)
+	docker run --rm --env-file .env -v $(PWD):/app $(DOCKER_IMAGE):$(TAG)
+
+docker-run-deploy:	## Run deployment updater in Docker (runs once and exits)
+	docker run --rm --env-file .env -v $(PWD):/app $(DOCKER_IMAGE):$(TAG) uv run main.py --updaters deployment
+
+docker-run-task:	## Run task updater in Docker (runs once and exits)
+	docker run --rm --env-file .env -v $(PWD):/app $(DOCKER_IMAGE):$(TAG) uv run main.py --updaters task
+
+docker-run-service:	## Run service updater in Docker (runs once and exits)
+	docker run --rm --env-file .env -v $(PWD):/app $(DOCKER_IMAGE):$(TAG) uv run main.py --updaters service
+
+# Note: For GUI development, use 'make gui' locally as Docker doesn't support GUI applications easily
 
 # =====================================
 #  🚀 Publish Docker Image to GitHub (GH) Packages
@@ -122,6 +122,7 @@ build-exe: ## Build the executable using PyInstaller
 	uv run pyi-makespec --onefile --windowed \
 		--icon=assets/img/notion_updater.ico \
 		--name="nsynca" \
+		--add-data="pyproject.toml;." \
 		--hidden-import=pkg_resources \
 		--hidden-import=packaging \
 		--hidden-import=packaging.version \
