@@ -13,6 +13,12 @@ _ Stakeholders: project managers, developers, data scientists, and anyone managi
 <img src="https://github.com/lisekarimi/nsynca/blob/main/assets/img/gui_update.png?raw=true" width="200"/>
 <img src="https://github.com/lisekarimi/nsynca/blob/main/assets/img/gui_logs.png?raw=true" width="250"/>
 
+
+## Demo
+
+Check out the live Notion template: [Project Management Demo](https://www.notion.so/lisekarimi/Project-Management-266a61e34bdf8088a400c6d390aa1321?source=copy_link)
+
+
 ## Pre-requisites
 
 **Notion Setup:**
@@ -55,7 +61,7 @@ make docker-dev
 ```
 📌 All available commands are documented in the `Makefile`.
 
-## 📦 Executable
+## 📦 Executable (Only for Windows users)
 
 Build standalone .exe:
 ```bash
