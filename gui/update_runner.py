@@ -1,3 +1,4 @@
+# gui/update_runner.py
 """
 Handles running updates in background threads with progress tracking.
 """
@@ -38,8 +39,14 @@ class UpdateRunner:
                 updater_types = [UpdaterType.ALL]
             elif update_type == "deployment":
                 updater_types = [UpdaterType.DEPLOYMENT]
-            else:
+            elif update_type == "task":
                 updater_types = [UpdaterType.TASK]
+            elif update_type == "charge":
+                updater_types = [UpdaterType.CHARGE]
+            elif update_type == "service":
+                updater_types = [UpdaterType.SERVICE]
+            else:
+                raise ValueError(f"Unknown update_type: {update_type}")
 
             self.update_queue.put(("status", f"Running {update_type} update..."))
 

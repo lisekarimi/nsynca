@@ -1,3 +1,4 @@
+# src/databases/tasks.py
 """
 Models and utilities for working with task data.
 """
@@ -12,7 +13,7 @@ class Task:
 
     # Status that marks a task as completed
     COMPLETED_STATUS = "Prod Deployed"
-    STATUS_PROPERTY_KEY = "Status "
+    STATUS_PROPERTY_KEY = "Status"
 
     def __init__(self, notion_obj: Dict[str, Any]):
         """

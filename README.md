@@ -1,12 +1,25 @@
-# 🛠️ Nsynca
+# Nsynca -  Notion sync/update toolkit
 
-A lightweight Python toolkit for syncing, updating, and analyzing Notion workspace data via the official Notion API.
+- A lightweight Python toolkit for syncing, updating, and analyzing Notion databases through the official REST API.
+- Provides modular updaters for:
+  - **Tasks** → track project progress
+  - **Deployments** → track versions and releases
+  - **Services + Charges** → manage subscriptions and payments
+- Creates or updates Notion pages as needed
+- Includes a GUI for one-click updates, logs, and results
+- Saves hours of manual work and keeps dashboards accurate and consistent
+_ Stakeholders: project managers, developers, data scientists, and anyone managing multiple projects or subscriptions in Notion.
 
-<img src="assets/img/gui_update.png" width="200"/>
-<img src="assets/img/gui_logs.png" width="250"/>
+<img src="https://github.com/lisekarimi/nsynca/blob/main/assets/img/gui_update.png?raw=true" width="200"/>
+<img src="https://github.com/lisekarimi/nsynca/blob/main/assets/img/gui_logs.png?raw=true" width="250"/>
 
 
-## 🔗 Prerequisites
+## Demo
+
+Check out the live Notion template: [Project Management Demo](https://www.notion.so/lisekarimi/Project-Management-266a61e34bdf8088a400c6d390aa1321?source=copy_link)
+
+
+## Pre-requisites
 
 **Notion Setup:**
 - Create an [integration in Notion](https://www.notion.so/profile/integrations)
@@ -15,57 +28,47 @@ A lightweight Python toolkit for syncing, updating, and analyzing Notion workspa
 **Development Tools:**
 - Python 3.11.x (not 3.12+)
 - [uv package manager](https://docs.astral.sh/uv/getting-started/installation/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Make: `winget install GnuWin32.Make` (Windows) | `brew install make` (macOS) | `sudo apt install make` (Linux)
 
+## Installation Instructions
 
-## 🛡️ Code Quality and Security
-- **Gitleaks** for secrets scanning
-- **Commitizen** for conventional commit messages  
-- **Ruff** for linting and formatting
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/lisekarimi/nsynca.git
+   cd nsynca
+   ```
 
+2. **Set Up Environment**:
+   - Copy the `.env.example` to `.env` and fill in the required environment variables.
+   - Install dependencies using `uv`:
+     ```bash
+     uv sync
+     ```
 
-## 🔧 Setup
+## Usage
 
-1. **Clone the repo**
+### Graphical User Interface
+
 ```bash
-git clone https://github.com/lisekarimi/nsynca.git
-cd nsynca
+make gui
 ```
 
-2. **Configure `.env`**
-
-Rename `.env.example` to `.env` and populate it with the required secrets.
-
-
-3. Install pre-commit hooks (optional)
+### Docker
 ```bash
-make install-hooks
+make docker-build
+make docker-dev
 ```
+📌 All available commands are documented in the `Makefile`.
 
+## 📦 Executable (Only for Windows users)
 
-## 🖥️ Running the App
-
-The virtual environment is created seamlessly when running the following commands - the magic of uv! ✨
-
-**For development:**
+Build standalone .exe:
 ```bash
-make run       # Run the main app
-make gui       # Run the GUI (for testing and dev)
+make build-exe  # Generate spec file
+make compile-exe # Create executable
 ```
-
-**Build executable:**
-```bash
-make build-exe    # Generate spec file
-make compile-exe  # Create executable
-```
-
-**For daily use:**
-- Run the `.exe` file in `dist/` folder
-- Provides GUI interface
-- Choose to update all fields or specific ones (Deploy, Task)
-
-📌 All other commands are listed in the `Makefile`.
-
+Find executable in `dist/` folder - create desktop shortcut for daily use.
 
 ## 📑 Logs
 
@@ -77,14 +80,20 @@ make compile-exe  # Create executable
 - Open the GUI to browse logs from previous runs
 - Filter by month, update type, or status (success, failed)
 
+## Development
+
+- **Code Quality**: Use `make lint` to check code quality and `make fix` to auto-fix issues.
+- **Security**: **Gitleaks** is integrated to scan for secrets in commits.
+- **Pre-commit Hooks**: Install hooks using `make install-hooks`.
+- **CI/CD**: Automated workflows run via **GitHub Actions** for build, linting, and testing.
 
 ## 🔐 Publishing Docker Image to GitHub Packages
 
-Since this is a private project, the Docker image is hosted in GitHub Packages.
+The Docker image for this project is hosted in GitHub Packages.
 
 **Prerequisites:**
 1. **Generate GitHub PAT**: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
-   - Name: "Docker Package Registry" 
+   - Name: "Docker Package Registry"
    - Expiration: 1 year
    - Scopes: `write:packages`, `read:packages`
    - Copy the token immediately

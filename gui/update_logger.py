@@ -1,3 +1,4 @@
+# gui/update_logger.py
 """
 Tracks and saves update history to JSON files.
 """
@@ -6,6 +7,7 @@ import os
 import json
 from datetime import datetime
 from typing import Dict
+from src.utils.logging import logger
 
 
 class UpdateLogger:
@@ -18,6 +20,8 @@ class UpdateLogger:
             "type": None,
             "status": "pending",
             "projects_updated": {},
+            "charges_created": {},
+            "services_updated": {},
         }
 
     def start_run(self, update_type: str):
@@ -27,6 +31,8 @@ class UpdateLogger:
             "type": update_type,
             "status": "running",
             "projects_updated": {},
+            "charges_created": {},
+            "services_updated": {},
         }
 
     def add_project_update(self, project_name: str, updates: Dict):
@@ -85,6 +91,39 @@ class UpdateLogger:
         else:
             self.current_run["projects_updated"][project_name].update(clean_updates)
 
+    def add_charge_create(self, charge_name: str, properties: Dict):
+        """Add a charge creation to current run."""
+        clean = {}
+
+        # Extract relevant charge properties
+        if "Date" in properties and isinstance(properties["Date"], dict):
+            date_value = properties["Date"].get("date", {})
+            clean["Date"] = date_value.get("start", "N/A") if date_value else "N/A"
+
+        if "Price" in properties and isinstance(properties["Price"], dict):
+            clean["Price"] = properties["Price"].get("number", "N/A")
+
+        if "Linked Service" in properties and isinstance(
+            properties["Linked Service"], dict
+        ):
+            relations = properties["Linked Service"].get("relation", [])
+            if relations:
+                clean["Service ID"] = relations[0].get("id", "N/A")
+
+        self.current_run["charges_created"][charge_name] = clean
+
+    def add_service_update(self, service_name: str, updates: Dict):
+        """Add a service update with normalized values for display."""
+        clean = {}
+        for k, v in updates.items():
+            if k == "Next Due Date" and isinstance(v, dict):
+                clean[k] = (v.get("date") or {}).get("start", "N/A")
+            elif k == "Status" and isinstance(v, dict):
+                clean[k] = ((v.get("status") or {}).get("name")) or "N/A"
+            else:
+                clean[k] = v
+        self.current_run["services_updated"].setdefault(service_name, {}).update(clean)
+
     def _extract_text(self, value: Dict) -> str:
         """Extract text from rich_text field."""
         if value.get("rich_text") and len(value["rich_text"]) > 0:
@@ -125,4 +164,4 @@ class UpdateLogger:
             with open(filename, "w") as f:
                 json.dump(existing, f, indent=2)
         except Exception as e:
-            print(f"Error saving log: {e}")
+            logger.error(f"Error saving log: {e}")

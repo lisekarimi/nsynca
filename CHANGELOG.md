@@ -1,3 +1,24 @@
+## [0.2.0]
+
+### ✨ Added
+- Services Updater for subscription tracking:
+  - SERVICES_DB_ID for configuring the Services database
+  - Automatic calculation of Next Due Date (monthly/annual)
+  - Automatic update of Status field (✅ Active / ⏳ Coming Soon / 🟠 Overdue / 🛑 Cancelled)
+  - New CLI option `--updaters service`
+- Charge Creator for automatic billing record generation:
+  - Added `create_page()` method to NotionWrapper
+  - Creates missing charge records from earliest existing charge date to present
+  - Supports monthly and yearly billing cycles
+  - Uses price from most recent existing charge
+  - Generates naming: "ServiceName Mon25", "ServiceName Jul25"
+  - Prevents duplicates and future-dated charges
+  - New CLI option `--updaters charge`
+
+### 🛠️ Changed
+- Refactored logs viewer and results display to share a common RunDataParser utility, eliminating duplicate logic
+
+
 ## [0.1.0]
 
 ### ✨ Added
