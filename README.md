@@ -1,4 +1,4 @@
-# Nsynca -  Notion sync/update toolkit
+# 🔄 Nsynca -  Notion sync/update toolkit
 
 - A lightweight Python toolkit for syncing, updating, and analyzing Notion databases through the official REST API.
 - Provides modular updaters for:
@@ -14,12 +14,12 @@ _ Stakeholders: project managers, developers, data scientists, and anyone managi
 <img src="https://github.com/lisekarimi/nsynca/blob/main/assets/img/gui_logs.png?raw=true" width="250"/>
 
 
-## Demo
+## 🎥 Demo
 
 Check out the live Notion template: [Project Management Demo](https://www.notion.so/lisekarimi/Project-Management-266a61e34bdf8088a400c6d390aa1321?source=copy_link)
 
 
-## Pre-requisites
+## 📋 Pre-requisites
 
 **Notion Setup:**
 - Create an [integration in Notion](https://www.notion.so/profile/integrations)
@@ -31,7 +31,7 @@ Check out the live Notion template: [Project Management Demo](https://www.notion
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - Make: `winget install GnuWin32.Make` (Windows) | `brew install make` (macOS) | `sudo apt install make` (Linux)
 
-## Installation Instructions
+## 🛠️ Installation Instructions
 
 1. **Clone the Repository**:
    ```bash
@@ -46,7 +46,7 @@ Check out the live Notion template: [Project Management Demo](https://www.notion
      uv sync
      ```
 
-## Usage
+## 🚀 Usage
 
 ### Graphical User Interface
 
@@ -80,7 +80,7 @@ Find executable in `dist/` folder - create desktop shortcut for daily use.
 - Open the GUI to browse logs from previous runs
 - Filter by month, update type, or status (success, failed)
 
-## Development
+## 🛠️ Development
 
 - **Code Quality**: Use `make lint` to check code quality and `make fix` to auto-fix issues.
 - **Security**: **Gitleaks** is integrated to scan for secrets in commits.
