@@ -117,6 +117,6 @@ class NotionWrapper:
             for prop in page["properties"].values():
                 if prop["type"] == "title" and prop["title"]:
                     return prop["title"][0]["text"]["content"]
-        except Exception:
+        except (KeyError, IndexError):
             pass
         return "(No title)"

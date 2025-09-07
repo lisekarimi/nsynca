@@ -2,7 +2,7 @@ name: Security Scan
 
 on:
   push:
-    branches: [main, dev]
+    branches: ["feature/**", "dev", "main"]
   pull_request:
     branches: [main, dev]
   workflow_dispatch:     # Allows manual triggering
@@ -10,7 +10,7 @@ on:
 jobs:
   gitleaks:
     name: Detect Secrets
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:

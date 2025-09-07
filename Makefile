@@ -46,6 +46,23 @@ fix: ## Auto-fix issues and format
 	$(RUFF) format .
 
 
+# =======================
+# 🔍 Security Scanning
+# =======================
+
+# check-secrets:		## Check for secrets/API keys
+# 	gitleaks detect --source . --verbose
+
+# bandit-scan:		## Check Python code for security issues
+# 	uvx bandit -r src/
+
+# audit:	## Audit dependencies for vulnerabilities
+# 	uv run --with pip-audit pip-audit
+
+security-scan:		## Run all security checks
+	gitleaks detect --source . --verbose && uv run --with pip-audit pip-audit && uvx bandit -r src/
+
+
 # =====================================
 # 🚀 Run App Locally
 # =====================================

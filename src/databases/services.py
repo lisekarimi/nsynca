@@ -90,7 +90,7 @@ def _title(p) -> str:
     try:
         if p and p.get("title"):
             return p["title"][0]["plain_text"]
-    except Exception:
+    except (KeyError, IndexError):
         pass
     return "(No title)"
 
@@ -104,7 +104,7 @@ def _select_or_status_name(p) -> Optional[str]:
         sts = p.get("status")
         if sts and sts.get("name"):
             return sts["name"]
-    except Exception:
+    except (KeyError, IndexError):
         pass
     return None
 
@@ -114,7 +114,7 @@ def _number(p) -> Optional[float]:
     try:
         if p and p.get("number") is not None:
             return float(p["number"])
-    except Exception:
+    except (KeyError, IndexError):
         pass
     return None
 
@@ -124,7 +124,7 @@ def _date(p) -> Optional[datetime]:
     try:
         if p and p.get("date") and p["date"].get("start"):
             return datetime.fromisoformat(p["date"]["start"]).date()
-    except Exception:
+    except (KeyError, IndexError):
         pass
     return None
 
@@ -134,6 +134,6 @@ def _relation(p) -> Optional[List[str]]:
     try:
         if p and p.get("relation"):
             return [rel["id"] for rel in p["relation"]]
-    except Exception:
+    except (KeyError, IndexError):
         pass
     return None
