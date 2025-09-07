@@ -5,12 +5,15 @@ on:
     branches: ["feature/**", "dev", "main"]
   pull_request:
     branches: [main, dev]
-  workflow_dispatch:     # Allows manual triggering
+  workflow_dispatch:
 
 jobs:
   gitleaks:
     name: Detect Secrets
     runs-on: ubuntu-22.04
+    permissions:            # Least privilege
+      contents: read          # For checkout
+      pull-requests: read     # For PR events
     steps:
       - uses: actions/checkout@v4
         with:
