@@ -55,17 +55,17 @@ class ServiceUpdater(PageUpdaterBase):
         # Update Status
         today = datetime.now(timezone.utc).date()
         if s.end_date_at:
-            status_val = "Cancelled"
+            status_val = "🛑 Cancelled"
         elif next_due_iso:
             next_due_date = datetime.fromisoformat(next_due_iso).date()
             if next_due_date < today:
-                status_val = "Overdue"
+                status_val = "🟠 Overdue"
             elif (next_due_date - today).days <= 5:
-                status_val = "Coming Soon"
+                status_val = "⏳ Coming Soon"
             else:
-                status_val = "Active"
+                status_val = "✅ Active"
         else:
-            status_val = "Active"
+            status_val = "✅ Active"
 
         updates = {
             "Status": {"select": {"name": status_val}},
