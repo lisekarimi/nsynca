@@ -1,3 +1,4 @@
+# src/services/task_updater.py
 """
 Service for updating task information in Notion projects.
 """
@@ -5,6 +6,7 @@ Service for updating task information in Notion projects.
 from typing import Dict, Any, Set
 from .base.project_updater_base import ProjectUpdaterBase
 from ..databases.tasks import TaskCollection, prepare_task_updates
+from ..client.notion_client import NotionWrapper
 from ..utils.logging import logger
 
 
@@ -13,7 +15,7 @@ class TaskUpdater(ProjectUpdaterBase):
     Service that updates Notion projects with task information.
     """
 
-    def __init__(self, notion_wrapper, tasks_db_id: str) -> None:
+    def __init__(self, notion_wrapper: NotionWrapper, tasks_db_id: str) -> None:
         """
         Initialize the TaskUpdater service.
 
@@ -24,7 +26,7 @@ class TaskUpdater(ProjectUpdaterBase):
         super().__init__(notion_wrapper)
         self.tasks_db_id = tasks_db_id
 
-    def fetch_all_tasks(self) -> TaskCollection:
+    def fetch_all_tasks(self) -> "TaskCollection":
         """
         Fetch all tasks from the Notion database.
 
@@ -41,7 +43,7 @@ class TaskUpdater(ProjectUpdaterBase):
             logger.error(f"Failed to fetch tasks: {e}")
             raise
 
-    def fetch_project_tasks(self, project_id: str) -> TaskCollection:
+    def fetch_project_tasks(self, project_id: str) -> "TaskCollection":
         """
         Fetch tasks related to a specific project.
 
@@ -76,14 +78,17 @@ class TaskUpdater(ProjectUpdaterBase):
         # Fetch tasks
         tasks = self.fetch_project_tasks(project_id)
 
-        # Log task details
-        logger.debug(f"Total fetched tasks for {project_name}: {tasks.total_count()}")
-        for task in tasks.tasks:
+        # Log task details (cap to avoid noisy logs)
+        total = tasks.total_count()
+        logger.debug(f"Total fetched tasks for {project_name}: {total}")
+        for task in tasks.tasks[:50]:
             logger.debug(f" - {task.title}")
+        if total > 50:
+            logger.debug(f" ... and {total - 50} more")
 
         # Log stats
         logger.info(
-            f"📊 {project_name} → Total Tasks: {tasks.total_count()}, "
+            f"📊 {project_name} → Total Tasks: {total}, "
             f"Completed (Prod): {tasks.count_completed()}"
         )
 
@@ -91,7 +96,7 @@ class TaskUpdater(ProjectUpdaterBase):
         return prepare_task_updates(tasks)
 
     def get_unique_project_ids_from_tasks(
-        self, task_collection: TaskCollection
+        self, task_collection: "TaskCollection"
     ) -> Set[str]:
         """
         Extract unique project IDs from all tasks.
@@ -102,7 +107,7 @@ class TaskUpdater(ProjectUpdaterBase):
         Returns:
             Set of unique project IDs
         """
-        project_ids = set()
+        project_ids: Set[str] = set()
         for task in task_collection.tasks:
             # Assuming task has a project_ids property that's a list
             if hasattr(task, "project_ids") and task.project_ids:
@@ -117,11 +122,19 @@ class TaskUpdater(ProjectUpdaterBase):
             project_id: ID of the project
         """
         try:
-            # Get project info
-            _, project_name = self.get_project_info(project_id)
+            # If the project page was deleted/unshared between discovery and processing
+            try:
+                _, project_name = self.get_project_info(project_id)
+            except Exception:
+                logger.debug(f"Project {project_id} not accessible; skipping.")
+                return
 
             # Process tasks and get updates
             task_updates = self._process_tasks(project_id, project_name)
+
+            if not task_updates:
+                logger.debug(f"No task updates computed for project {project_id}.")
+                return
 
             # Apply updates
             self.apply_updates(project_id, task_updates)

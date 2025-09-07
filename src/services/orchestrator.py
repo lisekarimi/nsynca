@@ -1,5 +1,6 @@
+# src/services/orchestrator.py
 """
-Orchestrator for coordinating multiple project updaters.
+Orchestrator for coordinating multiple page updaters (projects, tasks, services).
 """
 
 from typing import List, Optional, Dict
@@ -7,20 +8,26 @@ from enum import Enum
 from ..client.notion_client import NotionWrapper
 from .deployment_updater import DeploymentUpdater
 from .task_updater import TaskUpdater
+from .service_updater import ServiceUpdater
+from .charge_updater import ChargeUpdater
 from ..utils.logging import logger
 
 
 class UpdaterType(Enum):
-    """Types of available updaters."""
+    """
+    Types of available updaters.
+    """
 
     DEPLOYMENT = "deployment"
     TASK = "task"
+    SERVICE = "service"
+    CHARGE = "charge"
     ALL = "all"
 
 
-class ProjectUpdaterOrchestrator:
+class PageUpdaterOrchestrator:
     """
-    Orchestrates the execution of multiple project updaters.
+    Orchestrates the execution of multiple page updaters (project- and service-level).
     """
 
     def __init__(self, notion_wrapper: NotionWrapper, config: Dict[str, str]) -> None:
@@ -29,9 +36,7 @@ class ProjectUpdaterOrchestrator:
 
         Args:
             notion_wrapper: Wrapper for Notion API client
-            config: Dictionary containing database IDs:
-                - deployments_db_id: ID of deployments database
-                - tasks_db_id: ID of tasks database
+            config: Dictionary containing database IDs
         """
         self.notion = notion_wrapper
         self.config = config
@@ -40,13 +45,16 @@ class ProjectUpdaterOrchestrator:
         self.deployment_updater = DeploymentUpdater(
             notion_wrapper, config["deployments_db_id"]
         )
-
         self.task_updater = TaskUpdater(notion_wrapper, config["tasks_db_id"])
+        self.service_updater = ServiceUpdater(notion_wrapper, config["services_db_id"])
+        self.charge_updater = ChargeUpdater(notion_wrapper, config["services_db_id"])
 
         # Map updater types to instances
         self.updaters = {
             UpdaterType.DEPLOYMENT: self.deployment_updater,
             UpdaterType.TASK: self.task_updater,
+            UpdaterType.CHARGE: self.charge_updater,
+            UpdaterType.SERVICE: self.service_updater,
         }
 
     def run(
@@ -60,7 +68,7 @@ class ProjectUpdaterOrchestrator:
             parallel: Whether to run updaters in parallel (not implemented yet)
         """
         try:
-            logger.info("=== Starting Project Update Orchestration ===")
+            logger.info("=== Starting Page Update Orchestration ===")
 
             # Determine which updaters to run
             if updater_types is None or UpdaterType.ALL in updater_types:
@@ -82,7 +90,7 @@ class ProjectUpdaterOrchestrator:
             else:
                 self._run_sequential(updaters_to_run)
 
-            logger.info("=== Project Update Orchestration Complete ===")
+            logger.info("=== Page Update Orchestration Complete ===")
 
         except Exception as e:
             logger.error(f"Orchestrator execution error: {e}")
@@ -104,35 +112,52 @@ class ProjectUpdaterOrchestrator:
                 continue
 
     def run_deployment_updates(self) -> None:
-        """Convenience method to run only deployment updates."""
+        """
+        Convenience method to run only deployment updates.
+        """
         self.run([UpdaterType.DEPLOYMENT])
 
     def run_task_updates(self) -> None:
-        """Convenience method to run only task updates."""
+        """
+        Convenience method to run only task updates.
+        """
         self.run([UpdaterType.TASK])
 
+    def run_service_updates(self) -> None:
+        """
+        Convenience method to run only service updates.
+        """
+        self.run([UpdaterType.SERVICE])
+
+    def run_charge_updates(self) -> None:
+        """
+        Convenience method to run only charge updates.
+        """
+        self.run([UpdaterType.CHARGE])
+
     def run_all_updates(self) -> None:
-        """Convenience method to run all updates."""
+        """
+        Convenience method to run all updates.
+        """
         self.run([UpdaterType.ALL])
 
 
 def create_orchestrator(
-    notion_token: str, deployments_db_id: str, tasks_db_id: str
-) -> ProjectUpdaterOrchestrator:
+    notion_token: str, deployments_db_id: str, tasks_db_id: str, services_db_id: str
+) -> PageUpdaterOrchestrator:
     """
     Factory function to create an orchestrator instance.
 
     Args:
         notion_token: Notion API token
-        deployments_db_id: ID of deployments database
-        tasks_db_id: ID of tasks database
 
     Returns:
-        Configured orchestrator instance
+        Configured PageUpdaterOrchestrator instance
     """
     notion_wrapper = NotionWrapper(notion_token)
     config = {
         "deployments_db_id": deployments_db_id,
         "tasks_db_id": tasks_db_id,
+        "services_db_id": services_db_id,
     }
-    return ProjectUpdaterOrchestrator(notion_wrapper, config)
+    return PageUpdaterOrchestrator(notion_wrapper, config)
