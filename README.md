@@ -10,13 +10,12 @@
 - Saves hours of manual work and keeps dashboards accurate and consistent
 _ Stakeholders: project managers, developers, data scientists, and anyone managing multiple projects or subscriptions in Notion.
 
-<img src="https://github.com/lisekarimi/nsynca/blob/main/assets/img/gui_update.png?raw=true" width="200"/>
-<img src="https://github.com/lisekarimi/nsynca/blob/main/assets/img/gui_logs.png?raw=true" width="250"/>
-
-
-## 🎥 Demo
+🌐 **Visit the website:** [nsynca.lisekarimi.com](https://nsynca.lisekarimi.com)
 
 Check out the live Notion template: [Project Management Demo](https://www.notion.so/lisekarimi/Project-Management-266a61e34bdf8088a400c6d390aa1321?source=copy_link)
+
+<img src="https://github.com/lisekarimi/nsynca/blob/main/assets/img/gui_update.png?raw=true" width="200"/>
+<img src="https://github.com/lisekarimi/nsynca/blob/main/assets/img/gui_logs.png?raw=true" width="250"/>
 
 
 ## 📋 Pre-requisites
@@ -56,8 +55,8 @@ make gui
 
 ### Docker
 ```bash
-make docker-build
-make docker-dev
+make build
+make dev
 ```
 📌 All available commands are documented in the `Makefile`.
 
