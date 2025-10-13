@@ -35,25 +35,37 @@ class ServiceUpdater(PageUpdaterBase):
 
     def _compute_updates(self, s: Service) -> Dict[str, Any]:
         """Compute property updates for a service."""
-        # Update Next Due Date
-        next_due_iso: Optional[str] = (
-            None  # store Next Due Date as ISO string for Notion
-        )
-        if (
-            s.last_payment_at and s.billing_cycle
-        ):  # only compute if we have payment + cycle
-            cycle = s.billing_cycle.lower()  # normalize for comparison
-            if cycle == "monthly":
-                next_due_iso = (
-                    (s.last_payment_at + relativedelta(months=+1)).date().isoformat()
-                )  # add 1 month
-            elif cycle == "annual":
-                next_due_iso = (
-                    (s.last_payment_at + relativedelta(years=+1)).date().isoformat()
-                )  # add 1 year
-
-        # Update Status
         today = datetime.now(timezone.utc).date()
+        next_due_iso: Optional[str] = None
+
+        # Only compute next due date if service is active (not cancelled)
+        if not s.end_date_at and s.last_payment_at and s.billing_cycle:
+            cycle = s.billing_cycle.lower()
+            last_payment_date = (
+                s.last_payment_at.date()
+                if isinstance(s.last_payment_at, datetime)
+                else s.last_payment_at
+            )
+
+            # Calculate initial next due date
+            if cycle == "monthly":
+                next_due_date = last_payment_date + relativedelta(months=+1)
+            elif cycle == "yearly":
+                next_due_date = last_payment_date + relativedelta(years=+1)
+            else:
+                next_due_date = None
+
+            # Keep adding cycles until next due date is in the future
+            if next_due_date:
+                while next_due_date < today:
+                    if cycle == "monthly":
+                        next_due_date = next_due_date + relativedelta(months=+1)
+                    elif cycle == "yearly":
+                        next_due_date = next_due_date + relativedelta(years=+1)
+
+                next_due_iso = next_due_date.isoformat()
+
+        # Determine status
         if s.end_date_at:
             status_val = "🛑 Cancelled"
         elif next_due_iso:
@@ -70,8 +82,11 @@ class ServiceUpdater(PageUpdaterBase):
         updates = {
             "Status": {"select": {"name": status_val}},
         }
-        # Only add Next Due Date if we have a valid date
-        if next_due_iso:
+
+        # Handle Next Due Date
+        if s.end_date_at:
+            updates["Next Due Date"] = {"date": None}
+        elif next_due_iso:
             updates["Next Due Date"] = {"date": {"start": next_due_iso}}
 
         return updates
