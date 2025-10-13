@@ -77,32 +77,32 @@ gui:	## Run the GUI script (Docker doesn't support GUI)
 # 🐳 Docker Commands
 # =====================================
 
-docker-build:	## Build the Docker image
+build:	## Build the Docker image
 	docker build -t $(DOCKER_IMAGE):$(TAG) .
 
-docker-ls: ## List files in Docker image
+ls: ## List files in Docker image
 	docker run --rm $(DOCKER_IMAGE):$(TAG) ls -la /app
 
-docker-dev:	## Run Docker container with hot reload in background (for development sessions)
+dev:	## Run Docker container with hot reload in background (for development sessions)
 	docker run -d \
 		--name $(CONTAINER_NAME)-dev \
 		--env-file .env \
 		-v $(CURDIR):/app \
 		$(DOCKER_IMAGE):$(TAG)
 
-docker-run:	## Run all updaters in Docker (runs once and exits)
+run:	## Run all updaters in Docker (runs once and exits)
 	docker run --rm --env-file .env -v $(CURDIR):/app $(DOCKER_IMAGE):$(TAG)
 
-docker-deploy:	## Run deployment updater in Docker (runs once and exits)
+deploy:	## Run deployment updater in Docker (runs once and exits)
 	docker run --rm --env-file .env -v $(CURDIR):/app $(DOCKER_IMAGE):$(TAG) uv run main.py --updaters deployment
 
-docker-task:	## Run task updater in Docker (runs once and exits)
+task:	## Run task updater in Docker (runs once and exits)
 	docker run --rm --env-file .env -v $(CURDIR):/app $(DOCKER_IMAGE):$(TAG) uv run main.py --updaters task
 
-docker-service:	## Run service updater in Docker (runs once and exits)
+service:	## Run service updater in Docker (runs once and exits)
 	docker run --rm --env-file .env -v $(CURDIR):/app $(DOCKER_IMAGE):$(TAG) uv run main.py --updaters service
 
-docker-charge:	## Run charge updater in Docker (runs once and exits)
+charge:	## Run charge updater in Docker (runs once and exits)
 	docker run --rm --env-file .env -v $(CURDIR):/app $(DOCKER_IMAGE):$(TAG) uv run main.py --updaters charge
 
 # Note: For GUI development, use 'make gui' locally as Docker doesn't support GUI applications easily
