@@ -1,3 +1,11 @@
+## [0.2.1]
+
+### 🐛 Fixed
+- Cancelled services: Clear Next Due Date when End Date is set.
+- Yearly billing: Use “yearly” and roll forward to the next future due date.
+
+### ✨ Added
+
 ## [0.2.0]
 
 ### ✨ Added
