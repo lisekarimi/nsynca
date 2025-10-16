@@ -21,8 +21,10 @@ Check out the live Notion template: [Project Management Demo](https://www.notion
 ## 📋 Pre-requisites
 
 **Notion Setup:**
-- Create an [integration in Notion](https://www.notion.so/profile/integrations)
-- Share database access: Open database → ••• → Connections → Add your integration
+   - Copy our Notion template: [Project Management Template](https://www.notion.so/lisekarimi/Project-Management-266a61e34bdf8088a400c6d390aa1321?source=copy_link)
+   - Create a Notion integration at [notion.so/integrations](https://www.notion.so/profile/integrations)
+   - Share database access: Open database → ••• → Connections → Add your integration
+   - Add your projects, tasks, deployments, versions, and services that you want to track
 
 **Development Tools:**
 - Python 3.11.x (not 3.12+)
