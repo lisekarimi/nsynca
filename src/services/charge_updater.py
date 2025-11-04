@@ -93,14 +93,19 @@ class ChargeUpdater(PageUpdaterBase):
                 f"No existing charges found for service '{service.name}'. Cannot determine start date."
             )
 
-        earliest_charge_date = min(charges_with_dates, key=lambda x: x.date).date
+        latest_charge_date = max(charges_with_dates, key=lambda x: x.date).date
+
+        logger.info(f"🔍 Latest charge date for {service.name}: {latest_charge_date}")
 
         # Calculate expected dates from earliest charge to today
         expected_dates = []
-        current_date = earliest_charge_date
+        current_date = latest_charge_date
         today = datetime.now(timezone.utc).date()  # Convert to date object
 
-        while current_date <= today:
+        # Use end_date if service is cancelled, otherwise use today
+        end_limit = service.end_date_at.date() if service.end_date_at else today
+
+        while current_date <= end_limit:
             expected_dates.append(current_date)
 
             if service.billing_cycle.lower() == "monthly":
@@ -132,10 +137,10 @@ class ChargeUpdater(PageUpdaterBase):
     def generate_charge_name(
         self, service_name: str, charge_date: datetime.date
     ) -> str:
-        """Generate charge name in format: 'ServiceName Mon25'."""
-        month_abbr = charge_date.strftime("%b")  # Jan, Feb, etc.
+        """Generate charge name in format: 'ServiceName YYMM'."""
         year_short = charge_date.strftime("%y")  # 25, 26, etc.
-        return f"{service_name} {month_abbr}{year_short}"
+        month_num = charge_date.strftime("%m")  # 01, 02, ..., 12
+        return f"{service_name} {year_short}{month_num}"
 
     def create_charge_properties(
         self, service: Service, charge_date: datetime.date, price: float
@@ -151,6 +156,7 @@ class ChargeUpdater(PageUpdaterBase):
             },
             "Price": {"number": price},
             "Linked Service": {"relation": [{"id": service.id}]},
+            "Parent Service": {"rich_text": [{"text": {"content": service.name}}]},
         }
 
     def process_service(self, service: Service, all_charges: List[Service]) -> None:
@@ -170,21 +176,17 @@ class ChargeUpdater(PageUpdaterBase):
                 )
                 return
 
-            logger.info(
-                f"Expected {len(expected_dates)} total charges for {service.name}"
-            )
-
-            existing_dates = {
-                c.date for c in existing_charges if c.date
-            }  # Remove .date() call
+            existing_dates = {c.date for c in existing_charges if c.date}
 
             # Find missing charges
-            missing_dates = [
-                d for d in expected_dates if d not in existing_dates
-            ]  # Remove .date() call
+            missing_dates = [d for d in expected_dates if d not in existing_dates]
+
+            logger.info(
+                f"Missing charges to create: {len(missing_dates)} for {service.name}"
+            )
 
             if not missing_dates:
-                logger.info(f"✅ All charges exist for {service.name}")
+                logger.info(f"✅ All charges are up to date for {service.name}")
                 return
 
             logger.info(
