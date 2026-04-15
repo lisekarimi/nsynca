@@ -6,6 +6,11 @@ Notion API client wrapper and utilities.
 from typing import Dict, Any, List, Optional
 from notion_client import Client
 
+# Notion API caps a single query at 100 rows; we paginate up to this many total.
+# Bump this when any database grows close to the limit.
+MAX_QUERY_ROWS = 1000
+NOTION_PAGE_SIZE = 100
+
 
 class NotionWrapper:
     """
@@ -22,7 +27,7 @@ class NotionWrapper:
         self, database_id: str, filter_obj: Optional[Dict[str, Any]] = None
     ) -> List[Dict[str, Any]]:
         """
-        Query a Notion database with optional filters.
+        Query a Notion database with optional filters, paginating up to MAX_QUERY_ROWS.
 
         Args:
             database_id: ID of the Notion database
@@ -34,12 +39,22 @@ class NotionWrapper:
         Raises:
             Exception: If the query fails
         """
-        params = {"database_id": database_id}
+        params: Dict[str, Any] = {
+            "database_id": database_id,
+            "page_size": NOTION_PAGE_SIZE,
+        }
         if filter_obj:
             params["filter"] = filter_obj
 
+        results: List[Dict[str, Any]] = []
         try:
-            return self.client.databases.query(**params)["results"]
+            while len(results) < MAX_QUERY_ROWS:
+                response = self.client.databases.query(**params)
+                results.extend(response["results"])
+                if not response.get("has_more") or not response.get("next_cursor"):
+                    break
+                params["start_cursor"] = response["next_cursor"]
+            return results[:MAX_QUERY_ROWS]
         except Exception as e:
             raise Exception(f"Failed to query database {database_id}: {e}")
 
