@@ -45,7 +45,9 @@ class PageUpdaterOrchestrator:
         self.deployment_updater = DeploymentUpdater(
             notion_wrapper, config["deployments_db_id"]
         )
-        self.task_updater = TaskUpdater(notion_wrapper, config["tasks_db_id"])
+        self.task_updater = TaskUpdater(
+            notion_wrapper, config["tasks_db_id"], config["projects_db_id"]
+        )
         self.service_updater = ServiceUpdater(notion_wrapper, config["services_db_id"])
         self.charge_updater = ChargeUpdater(notion_wrapper, config["services_db_id"])
 

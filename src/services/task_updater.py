@@ -15,16 +15,20 @@ class TaskUpdater(ProjectUpdaterBase):
     Service that updates Notion projects with task information.
     """
 
-    def __init__(self, notion_wrapper: NotionWrapper, tasks_db_id: str) -> None:
+    def __init__(
+        self, notion_wrapper: NotionWrapper, tasks_db_id: str, projects_db_id: str
+    ) -> None:
         """
         Initialize the TaskUpdater service.
 
         Args:
             notion_wrapper: Wrapper for Notion API client
             tasks_db_id: ID of tasks database
+            projects_db_id: ID of projects database (used to discover all projects)
         """
         super().__init__(notion_wrapper)
         self.tasks_db_id = tasks_db_id
+        self.projects_db_id = projects_db_id
 
     def fetch_all_tasks(self) -> "TaskCollection":
         """
@@ -149,13 +153,13 @@ class TaskUpdater(ProjectUpdaterBase):
         try:
             logger.info("=== Starting Task Updates ===")
 
-            # Step 1: Fetch all tasks to get unique project IDs
-            all_tasks = self.fetch_all_tasks()
-            unique_project_ids = self.get_unique_project_ids_from_tasks(all_tasks)
-            logger.info(f"Found tasks for {len(unique_project_ids)} projects")
+            # Fetch all projects as the authoritative source, so projects with
+            # zero tasks still get their counts reset to 0.
+            all_projects = self.notion.query_database(self.projects_db_id)
+            project_ids = [p["id"] for p in all_projects]
+            logger.info(f"Found {len(project_ids)} projects to process")
 
-            # Step 2: Process each project that has tasks
-            for project_id in unique_project_ids:
+            for project_id in project_ids:
                 self.process_project(project_id)
 
             logger.info("=== Task Updates Complete ===")

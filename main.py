@@ -72,6 +72,7 @@ def main():
 
     # Get credentials and DB IDs from environment
     notion_token = os.getenv("NOTION_API_KEY")
+    projects_db_id = os.getenv("PROJECTS_DB_ID")
     deployments_db_id = os.getenv("DEPLOYMENTS_DB_ID")
     tasks_db_id = os.getenv("TASKS_DB_ID")
     services_db_id = os.getenv("SERVICES_DB_ID")
@@ -80,10 +81,12 @@ def main():
     if not notion_token:
         logger.error("NOTION_API_KEY environment variable not set")
         exit(1)
+    if not projects_db_id:
+        logger.error("PROJECTS_DB_ID must be set in environment")
+        exit(1)
     if not deployments_db_id:
         logger.error("DEPLOYMENTS_DB_ID must be set in environment")
         exit(1)
-
     if not tasks_db_id:
         logger.error("TASKS_DB_ID must be set in environment")
         exit(1)
@@ -103,6 +106,7 @@ def main():
 
         # Initialize the orchestrator with configuration
         config = {
+            "projects_db_id": projects_db_id,
             "deployments_db_id": deployments_db_id,
             "tasks_db_id": tasks_db_id,
             "services_db_id": services_db_id,
