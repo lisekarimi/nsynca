@@ -83,8 +83,9 @@ class NotionUpdaterGUI:
         deployments_db_id = os.getenv("DEPLOYMENTS_DB_ID")
         tasks_db_id = os.getenv("TASKS_DB_ID")
         services_db_id = os.getenv("SERVICES_DB_ID")
+        projects_db_id = os.getenv("PROJECTS_DB_ID")
 
-        if all([notion_token, deployments_db_id, tasks_db_id]):
+        if all([notion_token, deployments_db_id, tasks_db_id, projects_db_id]):
             try:
                 notion_client = Client(auth=notion_token)
                 notion_wrapper = NotionWrapper(notion_client)
@@ -96,6 +97,7 @@ class NotionUpdaterGUI:
                     "deployments_db_id": deployments_db_id,
                     "tasks_db_id": tasks_db_id,
                     "services_db_id": services_db_id,
+                    "projects_db_id": projects_db_id,
                 }
 
                 self.orchestrator = PageUpdaterOrchestrator(notion_wrapper, config)
